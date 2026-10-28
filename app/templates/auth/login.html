@@ -3,8 +3,10 @@
 <section class="login-panel card content-card">
   <div class="card-body p-4 p-md-5">
     <div class="text-center mb-4">
-      <div class="metric-icon mb-3"><i class="bi bi-shield-lock"></i></div>
-      <h1 class="h4">Учёт комплектующих АРМ МИАЦ</h1>
+      <div class="brand-logo brand-logo-login mx-auto mb-3">
+        <img src="{{ url_for('static', path='images/miac-logo.jpg') }}" alt="МИАЦ — медицинский информационно-аналитический центр">
+      </div>
+      <h1 class="visually-hidden">Учёт комплектующих АРМ МИАЦ</h1>
       <p class="text-secondary mb-0">Вход в защищённый контур</p>
     </div>
     {% if error %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endif %}

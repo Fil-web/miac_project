@@ -1,5 +1,6 @@
 :root {
   --miac-sidebar-width: 260px;
+  --miac-topbar-height: 108px;
   --miac-border: #dee2e6;
   --miac-bg: #f5f7fa;
 }
@@ -11,14 +12,14 @@ body {
 }
 
 .topbar {
-  min-height: 64px;
+  min-height: var(--miac-topbar-height);
   border-bottom: 1px solid var(--miac-border);
   background: #fff;
 }
 
 .sidebar {
   position: fixed;
-  top: 64px;
+  top: var(--miac-topbar-height);
   bottom: 0;
   left: 0;
   z-index: 100;
@@ -86,6 +87,36 @@ body {
 
 .login-panel {
   width: min(100% - 2rem, 440px);
+}
+
+/* У исходного знака широкие светлые поля; рамка показывает его центральную часть. */
+.brand-logo {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  flex: none;
+  background: #fff;
+}
+
+.brand-logo img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 185%;
+  height: 185%;
+  max-width: none;
+  transform: translate(-50%, -50%);
+  filter: brightness(1.04);
+}
+
+.brand-logo-header {
+  width: 96px;
+  height: 96px;
+}
+
+.brand-logo-login {
+  width: min(100%, 280px);
+  aspect-ratio: 1;
 }
 
 .word-break {
@@ -253,6 +284,15 @@ details > summary.btn-icon::-webkit-details-marker {
 }
 
 @media (max-width: 575.98px) {
+  :root {
+    --miac-topbar-height: 84px;
+  }
+
+  .brand-logo-header {
+    width: 72px;
+    height: 72px;
+  }
+
   .catalog-nav {
     grid-template-columns: 1fr;
   }

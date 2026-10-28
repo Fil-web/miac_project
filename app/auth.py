@@ -84,7 +84,7 @@ def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
     if (
         user.must_change_password
         and user.role.name != "admin"
-        and request.url.path not in {"/change-password", "/logout"}
+        and request.scope["path"] not in {"/change-password", "/logout"}
     ):
         raise HTTPException(status_code=status.HTTP_303_SEE_OTHER, headers={"Location": "/change-password"})
     return user
