@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block breadcrumbs %}<li class="breadcrumb-item active">Справочники</li>{% endblock %}
+{% block content %}
+{% macro state_badge(item) %}
+  {% if item.is_active %}
+    <span class="status-icon status-icon-active" title="Действует" aria-label="Действует"><i class="bi bi-check-lg"></i></span>
+  {% else %}
+    <span class="status-icon status-icon-archived" title="В архиве" aria-label="В архиве"><i class="bi bi-archive"></i></span>
+  {% endif %}
+{% endmacro %}
+
+{% macro catalog_actions(item) %}
+<div class="action-buttons">
+  <a class="btn btn-sm btn-icon btn-outline-primary" href="/catalogs?section={{ section }}&edit_id={{ item.id }}" title="Изменить" aria-label="Изменить"><i class="bi bi-pencil"></i></a>
+  <form method="post" action="/catalogs/{{ entity }}/{{ item.id }}/toggle">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    {% if item.is_active %}
+      <button class="btn btn-sm btn-icon btn-outline-secondary" type="submit" title="Перенести в архив" aria-label="Перенести в архив"><i class="bi bi-archive"></i></button>
+    {% else %}
+      <button class="btn btn-sm btn-icon btn-outline-success" type="submit" title="Восстановить" aria-label="Восстановить"><i class="bi bi-arrow-counterclockwise"></i></button>
+    {% endif %}
+  </form>
+  <form method="post" action="/catalogs/{{ entity }}/{{ item.id }}/delete" class="js-confirm-form" data-confirm="Удалить элемент справочника без возможности восстановления?">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <button class="btn btn-sm btn-icon btn-outline-danger" type="submit" title="Удалить" aria-label="Удалить"><i class="bi bi-trash3"></i></button>
+  </form>
+</div>
+{% endmacro %}
+
+<div class="mb-4">
+  <h1 class="h3 mb-1">Справочники</h1>
+  <p class="text-secondary mb-0">Выберите нужный список. Связанные записи можно архивировать, а неиспользуемые — удалить.</p>
+</div>
+
+<nav class="catalog-nav mb-4" aria-label="Разделы справочников">
+  <a class="catalog-nav-item {% if section == 'reserves' %}active{% endif %}" href="/catalogs?section=reserves"><i class="bi bi-database"></i><span>Резервы</span></a>
+  <a class="catalog-nav-item {% if section == 'categories' %}active{% endif %}" href="/catalogs?section=categories"><i class="bi bi-tags"></i><span>Категории</span></a>
+  <a class="catalog-nav-item {% if section == 'employees' %}active{% endif %}" href="/catalogs?section=employees"><i class="bi bi-people"></i><span>Сотрудники</span></a>
+  <a class="catalog-nav-item {% if section == 'suppliers' %}active{% endif %}" href="/catalogs?section=suppliers"><i class="bi bi-truck"></i><span>Поставщики</span></a>
+</nav>
+
+{% if section == 'reserves' %}
+<section class="card content-card">
+  <div class="card-header bg-white py-3"><h2 class="h5 mb-0">Резервы (источники)</h2></div>
+  <div class="card-body">
+    {% if user.role.name == 'admin' %}
+      {% if edit_item %}<form method="post" action="/catalogs/reserve/{{ edit_item.id }}/edit" class="row g-2 mb-3"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><div class="col-md-2"><input class="form-control font-monospace" value="{{ edit_item.code }}" aria-label="Код" disabled><div class="form-text">Код неизменяемый</div></div><div class="col-md-4"><input class="form-control" name="name" value="{{ edit_item.name }}" maxlength="255" aria-label="Наименование" required></div><div class="col-md-4"><input class="form-control" name="description" value="{{ edit_item.description or '' }}" maxlength="2000" aria-label="Описание"></div><div class="col-md-1 d-grid"><button class="btn btn-primary" type="submit" title="Сохранить" aria-label="Сохранить"><i class="bi bi-check-lg"></i></button></div><div class="col-md-1 d-grid"><a class="btn btn-outline-secondary" href="/catalogs?section=reserves" title="Отменить" aria-label="Отменить"><i class="bi bi-x-lg"></i></a></div></form>
+      {% else %}<form method="post" action="/catalogs/reserves" class="row g-2 mb-3"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><div class="col-md-2"><input class="form-control" name="code" maxlength="50" placeholder="Код" aria-label="Код" required></div><div class="col-md-4"><input class="form-control" name="name" maxlength="255" placeholder="Наименование" aria-label="Наименование" required></div><div class="col-md-4"><input class="form-control" name="description" maxlength="2000" placeholder="Описание" aria-label="Описание"></div><div class="col-md-2 d-grid"><button class="btn btn-primary" type="submit"><i class="bi bi-plus-lg me-1"></i>Добавить</button></div></form>{% endif %}
+    {% endif %}
+    <div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Код</th><th>Наименование</th><th>Описание</th><th class="text-center">Состояние</th>{% if user.role.name == 'admin' %}<th class="text-end">Действия</th>{% endif %}</tr></thead><tbody>
+    {% for item in items %}<tr><td class="font-monospace">{{ item.code }}</td><td>{{ item.name }}</td><td>{{ item.description or '—' }}</td><td class="text-center">{{ state_badge(item) }}</td>{% if user.role.name == 'admin' %}<td>{{ catalog_actions(item) }}</td>{% endif %}</tr>{% else %}<tr><td colspan="5" class="text-center text-secondary py-4">Записей нет</td></tr>{% endfor %}
+    </tbody></table></div>
+  </div>
+</section>
+{% elif section == 'categories' %}
+<section class="card content-card">
+  <div class="card-header bg-white py-3"><h2 class="h5 mb-0">Категории комплектующих</h2></div>
+  <div class="card-body">
+    {% if user.role.name == 'admin' %}
+      {% if edit_item %}<form method="post" action="/catalogs/category/{{ edit_item.id }}/edit" class="row g-2 mb-3"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><div class="col-md-5"><input class="form-control" name="name" value="{{ edit_item.name }}" maxlength="255" aria-label="Наименование" required></div><div class="col-md-5"><input class="form-control" name="description" value="{{ edit_item.description or '' }}" maxlength="2000" aria-label="Описание"></div><div class="col-md-1 d-grid"><button class="btn btn-primary" type="submit" title="Сохранить" aria-label="Сохранить"><i class="bi bi-check-lg"></i></button></div><div class="col-md-1 d-grid"><a class="btn btn-outline-secondary" href="/catalogs?section=categories" title="Отменить" aria-label="Отменить"><i class="bi bi-x-lg"></i></a></div></form>
+      {% else %}<form method="post" action="/catalogs/categories" class="row g-2 mb-3"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><div class="col-md-5"><input class="form-control" name="name" maxlength="255" placeholder="Наименование" aria-label="Наименование" required></div><div class="col-md-5"><input class="form-control" name="description" maxlength="2000" placeholder="Описание" aria-label="Описание"></div><div class="col-md-2 d-grid"><button class="btn btn-primary" type="submit"><i class="bi bi-plus-lg me-1"></i>Добавить</button></div></form>{% endif %}
+    {% endif %}
+    <div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Наименование</th><th>Описание</th><th class="text-center">Состояние</th>{% if user.role.name == 'admin' %}<th class="text-end">Действия</th>{% endif %}</tr></thead><tbody>
+    {% for item in items %}<tr><td>{{ item.name }}</td><td>{{ item.description or '—' }}</td><td class="text-center">{{ state_badge(item) }}</td>{% if user.role.name == 'admin' %}<td>{{ catalog_actions(item) }}</td>{% endif %}</tr>{% else %}<tr><td colspan="4" class="text-center text-secondary py-4">Записей нет</td></tr>{% endfor %}
+    </tbody></table></div>
+  </div>
+</section>
+{% elif section == 'employees' %}
+<section class="card content-card">
+  <div class="card-header bg-white py-3"><h2 class="h5 mb-0">Сотрудники</h2></div>
+  <div class="card-body">
+    {% if user.role.name == 'admin' %}
+      {% if edit_item %}<form method="post" action="/catalogs/employee/{{ edit_item.id }}/edit" class="row g-2 mb-3"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><div class="col-lg-4"><input class="form-control" name="full_name" value="{{ edit_item.full_name }}" maxlength="255" aria-label="ФИО" required></div><div class="col-lg-2"><input class="form-control" name="department" value="{{ edit_item.department or '' }}" maxlength="255" aria-label="Подразделение"></div><div class="col-lg-2"><input class="form-control" name="position" value="{{ edit_item.position or '' }}" maxlength="255" aria-label="Должность"></div><div class="col-lg-2"><input class="form-control" name="phone" value="{{ edit_item.phone or '' }}" maxlength="50" aria-label="Телефон"></div><div class="col-lg-1 d-grid"><button class="btn btn-primary" type="submit" title="Сохранить" aria-label="Сохранить"><i class="bi bi-check-lg"></i></button></div><div class="col-lg-1 d-grid"><a class="btn btn-outline-secondary" href="/catalogs?section=employees" title="Отменить" aria-label="Отменить"><i class="bi bi-x-lg"></i></a></div></form>
+      {% else %}<form method="post" action="/catalogs/employees" class="row g-2 mb-3"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><div class="col-lg-4"><input class="form-control" name="full_name" maxlength="255" placeholder="ФИО" aria-label="ФИО" required></div><div class="col-lg-2"><input class="form-control" name="department" maxlength="255" placeholder="Подразделение" aria-label="Подразделение"></div><div class="col-lg-2"><input class="form-control" name="position" maxlength="255" placeholder="Должность" aria-label="Должность"></div><div class="col-lg-2"><input class="form-control" name="phone" maxlength="50" placeholder="Телефон" aria-label="Телефон"></div><div class="col-lg-2 d-grid"><button class="btn btn-primary" type="submit"><i class="bi bi-plus-lg me-1"></i>Добавить</button></div></form>{% endif %}
+    {% endif %}
+    <div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>ФИО</th><th>Подразделение</th><th>Должность</th><th>Телефон</th><th class="text-center">Состояние</th>{% if user.role.name == 'admin' %}<th class="text-end">Действия</th>{% endif %}</tr></thead><tbody>
+    {% for item in items %}<tr><td>{{ item.full_name }}</td><td>{{ item.department or '—' }}</td><td>{{ item.position or '—' }}</td><td>{{ item.phone or '—' }}</td><td class="text-center">{{ state_badge(item) }}</td>{% if user.role.name == 'admin' %}<td>{{ catalog_actions(item) }}</td>{% endif %}</tr>{% else %}<tr><td colspan="6" class="text-center text-secondary py-4">Записей нет</td></tr>{% endfor %}
+    </tbody></table></div>
+  </div>
+</section>
+{% else %}
+<section class="card content-card">
+  <div class="card-header bg-white py-3"><h2 class="h5 mb-0">Поставщики</h2></div>
+  <div class="card-body">
+    {% if user.role.name == 'admin' %}
+      {% if edit_item %}<form method="post" action="/catalogs/supplier/{{ edit_item.id }}/edit" class="row g-2 mb-3"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><div class="col-md-4"><input class="form-control" name="name" value="{{ edit_item.name }}" maxlength="255" aria-label="Наименование" required></div><div class="col-md-2"><input class="form-control" name="inn" value="{{ edit_item.inn or '' }}" maxlength="12" aria-label="ИНН"></div><div class="col-md-4"><input class="form-control" name="contact_info" value="{{ edit_item.contact_info or '' }}" maxlength="2000" aria-label="Контактные данные"></div><div class="col-md-1 d-grid"><button class="btn btn-primary" type="submit" title="Сохранить" aria-label="Сохранить"><i class="bi bi-check-lg"></i></button></div><div class="col-md-1 d-grid"><a class="btn btn-outline-secondary" href="/catalogs?section=suppliers" title="Отменить" aria-label="Отменить"><i class="bi bi-x-lg"></i></a></div></form>
+      {% else %}<form method="post" action="/catalogs/suppliers" class="row g-2 mb-3"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><div class="col-md-4"><input class="form-control" name="name" maxlength="255" placeholder="Наименование" aria-label="Наименование" required></div><div class="col-md-2"><input class="form-control" name="inn" maxlength="12" placeholder="ИНН" aria-label="ИНН"></div><div class="col-md-4"><input class="form-control" name="contact_info" maxlength="2000" placeholder="Контактные данные" aria-label="Контактные данные"></div><div class="col-md-2 d-grid"><button class="btn btn-primary" type="submit"><i class="bi bi-plus-lg me-1"></i>Добавить</button></div></form>{% endif %}
+    {% endif %}
+    <div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Наименование</th><th>ИНН</th><th>Контакты</th><th class="text-center">Состояние</th>{% if user.role.name == 'admin' %}<th class="text-end">Действия</th>{% endif %}</tr></thead><tbody>
+    {% for item in items %}<tr><td>{{ item.name }}</td><td class="font-monospace">{{ item.inn or '—' }}</td><td>{{ item.contact_info or '—' }}</td><td class="text-center">{{ state_badge(item) }}</td>{% if user.role.name == 'admin' %}<td>{{ catalog_actions(item) }}</td>{% endif %}</tr>{% else %}<tr><td colspan="5" class="text-center text-secondary py-4">Записей нет</td></tr>{% endfor %}
+    </tbody></table></div>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

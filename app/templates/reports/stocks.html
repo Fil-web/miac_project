@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% from "reports/_buttons.html" import export_buttons %}
+{% block breadcrumbs %}<li class="breadcrumb-item"><a href="/reports">Отчёты</a></li><li class="breadcrumb-item active">Остатки по резервам</li>{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3"><div><h1 class="h3 mb-1">Остатки по резервам</h1><p class="text-secondary mb-0">Состояние на момент формирования</p></div>{{ export_buttons('/reports/stocks/export/pdf', '/reports/stocks/export/xlsx') }}</div>
+<div class="card content-card"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Код</th><th>Резерв</th><th class="text-end">На складе</th><th class="text-end">Установлено</th><th class="text-end">Списано</th><th class="text-end">Всего</th></tr></thead><tbody>{% for row in rows %}<tr><td class="font-monospace">{{ row.code }}</td><td>{{ row.name }}</td><td class="text-end fw-semibold">{{ row.in_stock }}</td><td class="text-end">{{ row.installed }}</td><td class="text-end">{{ row.written_off }}</td><td class="text-end">{{ row.total }}</td></tr>{% else %}<tr><td colspan="6" class="text-center text-secondary py-4">Данных нет</td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block breadcrumbs %}<li class="breadcrumb-item active">АРМ</li>{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+  <div>
+    <h1 class="h3 mb-1">Автоматизированные рабочие места</h1>
+    <p class="text-secondary mb-0">Рабочие места и установленные в них комплектующие</p>
+  </div>
+  <div class="d-flex flex-wrap gap-2 no-print">
+    {% if user.role.name == 'admin' %}
+      <div class="btn-group" role="group" aria-label="Состояние АРМ">
+        <a class="btn {{ 'btn-primary' if not deleted else 'btn-outline-primary' }}" href="/workstations">Действующие</a>
+        <a class="btn {{ 'btn-primary' if deleted else 'btn-outline-primary' }}" href="/workstations?deleted=true">Удалённые</a>
+      </div>
+      {% if not deleted %}<a href="/workstations/new" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Новое АРМ</a>{% endif %}
+    {% endif %}
+  </div>
+</div>
+
+{% if deleted %}
+<div class="alert alert-info"><i class="bi bi-info-circle me-1"></i>Удаление не стирает карточку и историю АРМ. Запись можно восстановить.</div>
+{% endif %}
+
+<div class="card content-card mb-3 no-print">
+  <div class="card-body">
+    <form class="row g-2" method="get">
+      {% if deleted %}<input type="hidden" name="deleted" value="true">{% endif %}
+      <div class="col-12 col-lg-9"><input class="form-control" name="q" value="{{ q }}" placeholder="Наименование или кабинет" aria-label="Поиск АРМ"></div>
+      <div class="col-12 col-lg-3 d-grid"><button class="btn btn-outline-primary" type="submit"><i class="bi bi-search me-1"></i>Найти</button></div>
+    </form>
+  </div>
+</div>
+
+<div class="card content-card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead><tr><th>Наименование</th><th>Кабинет</th><th>Ответственный</th><th>Состояние</th>{% if user.role.name == 'admin' %}<th class="text-end no-print">Действия</th>{% endif %}</tr></thead>
+      <tbody>
+      {% for row in workstation_rows %}
+        {% set workstation = row.workstation %}
+        <tr {% if workstation.is_deleted %}class="table-secondary"{% endif %}>
+          <td>
+            <a class="fw-semibold text-decoration-none" href="/workstations/{{ workstation.id }}">{{ workstation.name }}</a>
+            {% if workstation.is_deleted %}<div class="small text-danger">Удалил: {{ workstation.deleted_by_user.username if workstation.deleted_by_user else 'не определён' }}<br>Причина: {{ workstation.deletion_reason or 'не указана' }}</div>{% endif %}
+          </td>
+          <td>{{ workstation.cabinet }}</td>
+          <td>{{ workstation.responsible.full_name if workstation.responsible else 'Не назначен' }}</td>
+          <td>
+            {% if workstation.is_deleted %}
+              <span class="status-icon status-icon-archived" title="Удалено" aria-label="Удалено"><i class="bi bi-trash3"></i></span>
+            {% elif row.is_operational %}
+              <span class="status-icon status-icon-active" title="Действует: основные комплектующие установлены" aria-label="Действует"><i class="bi bi-check-lg"></i></span>
+            {% else %}
+              <span class="status-icon status-icon-inactive" title="Не действует. Отсутствуют: {{ row.missing_components|join(', ') if row.missing_components else 'АРМ отключено' }}" aria-label="Не действует"><i class="bi bi-x-lg"></i></span>
+            {% endif %}
+          </td>
+          {% if user.role.name == 'admin' %}
+          <td class="no-print">
+            <div class="action-buttons">
+              {% if workstation.is_deleted %}
+                <form method="post" action="/workstations/{{ workstation.id }}/restore">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                  <button class="btn btn-sm btn-icon btn-outline-success" type="submit" title="Восстановить" aria-label="Восстановить"><i class="bi bi-arrow-counterclockwise"></i></button>
+                </form>
+              {% else %}
+                <a class="btn btn-sm btn-icon btn-outline-primary" href="/workstations/{{ workstation.id }}/edit" title="Изменить" aria-label="Изменить"><i class="bi bi-pencil"></i></a>
+                <details>
+                  <summary class="btn btn-sm btn-icon btn-outline-danger" title="Удалить" aria-label="Удалить"><i class="bi bi-trash3"></i></summary>
+                  <form method="post" action="/workstations/{{ workstation.id }}/delete" class="border rounded bg-white p-2 mt-2 workstation-delete-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <label class="form-label small" for="workstation-reason-{{ workstation.id }}">Причина удаления</label>
+                    <textarea class="form-control form-control-sm mb-2" id="workstation-reason-{{ workstation.id }}" name="reason" minlength="3" maxlength="1000" rows="2" required></textarea>
+                    <button class="btn btn-sm btn-danger" type="submit"><i class="bi bi-trash3 me-1"></i>Подтвердить</button>
+                  </form>
+                </details>
+              {% endif %}
+            </div>
+          </td>
+          {% endif %}
+        </tr>
+      {% else %}
+        <tr><td colspan="{{ 5 if user.role.name == 'admin' else 4 }}" class="text-center text-secondary py-5">АРМ не найдены</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

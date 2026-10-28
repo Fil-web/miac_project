@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block breadcrumbs %}<li class="breadcrumb-item active">Комплектующие</li>{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+  <div><h1 class="h3 mb-1">Комплектующие</h1><p class="text-secondary mb-0">Найдено записей: {{ total }}</p></div>
+  <div class="d-flex flex-wrap gap-2">
+    {% if user.role.name == 'admin' %}
+    <div class="btn-group" role="group" aria-label="Состояние комплектующих">
+      <a class="btn {% if not deleted %}btn-primary{% else %}btn-outline-primary{% endif %}" href="/parts">Действующие</a>
+      <a class="btn {% if deleted %}btn-primary{% else %}btn-outline-primary{% endif %}" href="/parts?deleted=true">Удалённые</a>
+    </div>
+    {% endif %}
+    {% if user.role.name in ['admin', 'storekeeper'] and not deleted %}<a href="/parts/new" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Новое комплектующее</a>{% endif %}
+  </div>
+</div>
+{% if deleted %}<div class="alert alert-info"><i class="bi bi-info-circle me-1"></i>Удалённые карточки исключены из АРМ, остатков и отчётов, но их история сохранена.</div>{% endif %}
+<div class="card content-card mb-3"><div class="card-body"><form class="row g-3 align-items-end" method="get">
+  {% if deleted %}<input type="hidden" name="deleted" value="true">{% endif %}
+  <div class="col-12 col-lg-4"><label class="form-label" for="q">Поиск</label><input class="form-control" id="q" name="q" value="{{ q }}" placeholder="Наименование, инвентарный или серийный номер"></div>
+  <div class="col-12 col-md-5 col-lg-3"><label class="form-label" for="reserve_id">Резерв</label><select class="form-select" id="reserve_id" name="reserve_id"><option value="">Все резервы</option>{% for reserve in reserves %}<option value="{{ reserve.id }}" {% if selected_reserve == reserve.id %}selected{% endif %}>{{ reserve.name }}</option>{% endfor %}</select></div>
+  <div class="col-12 col-md-4 col-lg-3"><label class="form-label" for="status">Статус</label><select class="form-select" id="status" name="status"><option value="">Все статусы</option>{% for code, label in status_labels.items() %}<option value="{{ code }}" {% if selected_status == code %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+  <div class="col-12 col-md-3 col-lg-2 d-grid"><button class="btn btn-outline-primary" type="submit"><i class="bi bi-funnel me-1"></i>Применить</button></div>
+</form></div></div>
+<div class="card content-card"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Наименование</th><th>Тип</th><th>Инвентарный номер</th><th>Серийный номер</th><th>Резерв</th><th>Статус</th><th>АРМ</th>{% if user.role.name in ['admin', 'storekeeper'] %}<th class="no-print">Действия</th>{% endif %}</tr></thead><tbody>
+{% for part in parts %}
+<tr {% if part.is_deleted %}class="table-secondary"{% endif %}>
+  <td><a class="fw-semibold text-decoration-none" href="/parts/{{ part.id }}">{{ part.name }}</a>{% if part.is_deleted %}<div class="small text-danger">Удалил: {{ part.deleted_by_user.username if part.deleted_by_user else 'не определён' }}<br>Причина: {{ part.deletion_reason }}</div>{% endif %}</td>
+  <td>{{ part.part_type }}</td>
+  <td class="font-monospace">{{ part.inventory_number or '—' }}</td>
+  <td class="font-monospace">{{ part.serial_number or '—' }}</td>
+  <td>{{ part.reserve.name }}</td>
+  <td><span class="badge status-{{ part.status.replace('_', '-') }}">{{ status_labels[part.status] }}</span>{% if part.is_deleted %}<div><span class="badge text-bg-danger mt-1">Удалено</span></div>{% endif %}</td>
+  <td>{% if part.current_workstation %}<a href="/workstations/{{ part.current_workstation.id }}">{{ part.current_workstation.name }}</a>{% else %}—{% endif %}</td>
+  {% if user.role.name in ['admin', 'storekeeper'] %}<td class="no-print">
+    <div class="action-buttons">
+      {% if part.is_deleted %}
+        {% if user.role.name == 'admin' %}<form method="post" action="/parts/{{ part.id }}/restore"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="btn btn-sm btn-icon btn-outline-success" type="submit" title="Восстановить" aria-label="Восстановить"><i class="bi bi-arrow-counterclockwise"></i></button></form>{% endif %}
+      {% else %}
+        <a class="btn btn-sm btn-icon btn-outline-primary" href="/parts/{{ part.id }}/edit" title="Изменить" aria-label="Изменить"><i class="bi bi-pencil"></i></a>
+        {% if user.role.name == 'admin' %}<details><summary class="btn btn-sm btn-icon btn-outline-danger" title="Удалить" aria-label="Удалить"><i class="bi bi-trash3"></i></summary><form method="post" action="/parts/{{ part.id }}/delete" class="border rounded bg-white p-2 mt-2" style="min-width: 16rem;"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><label class="form-label small" for="part-reason-{{ part.id }}">Причина удаления</label><textarea class="form-control form-control-sm mb-2" id="part-reason-{{ part.id }}" name="reason" minlength="3" maxlength="1000" rows="2" required></textarea><button class="btn btn-sm btn-danger" type="submit"><i class="bi bi-trash3 me-1"></i>Подтвердить</button></form></details>{% endif %}
+      {% endif %}
+    </div>
+  </td>{% endif %}
+</tr>
+{% else %}<tr><td class="text-center text-secondary py-5" colspan="{{ 8 if user.role.name in ['admin', 'storekeeper'] else 7 }}">По заданным условиям ничего не найдено</td></tr>{% endfor %}
+</tbody></table></div></div>
+{% if pages > 1 %}<nav class="mt-3 no-print" aria-label="Страницы"><ul class="pagination mb-0">{% for number in range(1, pages + 1) %}<li class="page-item {% if number == page %}active{% endif %}"><a class="page-link" href="?page={{ number }}&q={{ q }}{% if selected_reserve %}&reserve_id={{ selected_reserve }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if deleted %}&deleted=true{% endif %}">{{ number }}</a></li>{% endfor %}</ul></nav>{% endif %}
+{% endblock %}

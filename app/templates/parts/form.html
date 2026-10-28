@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block breadcrumbs %}<li class="breadcrumb-item"><a href="/parts">Комплектующие</a></li><li class="breadcrumb-item active">{{ page_title }}</li>{% endblock %}
+{% block content %}
+{% set no_inventory = without_inventory_number if without_inventory_number is defined else (part and not part.inventory_number) %}
+<div class="row"><div class="col-12 col-xxl-9"><div class="card content-card"><div class="card-body p-4">
+  <h1 class="h4 mb-4">{{ page_title }}</h1>{% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+  <form method="post" action="{% if part and part.id %}/parts/{{ part.id }}/edit{% else %}/parts/new{% endif %}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <div class="row g-3">
+      <div class="col-12 col-lg-7"><label class="form-label required-label" for="name">Наименование</label><input class="form-control" id="name" name="name" maxlength="255" value="{{ part.name if part else '' }}" required></div>
+      <div class="col-12 col-lg-5"><label class="form-label required-label" for="part_type">Тип / модель</label><input class="form-control" id="part_type" name="part_type" maxlength="150" value="{{ part.part_type if part else '' }}" required></div>
+      <div class="col-12 col-md-6">
+        <label class="form-label required-label" for="inventory_number">Инвентарный номер</label>
+        <input class="form-control font-monospace" id="inventory_number" name="inventory_number" maxlength="150" value="{{ part.inventory_number or '' if part else '' }}" {% if no_inventory %}disabled{% else %}required{% endif %}>
+        <div class="form-check mt-2"><input class="form-check-input js-without-inventory" type="checkbox" id="without_inventory_number" name="without_inventory_number" value="true" data-target="inventory_number" {% if no_inventory %}checked{% endif %}><label class="form-check-label" for="without_inventory_number">Без инвентарного номера</label></div>
+      </div>
+      <div class="col-12 col-md-6"><label class="form-label" for="serial_number">Серийный номер</label><input class="form-control font-monospace" id="serial_number" name="serial_number" maxlength="150" value="{{ part.serial_number or '' if part else '' }}"></div>
+      <div class="col-12 col-md-6"><label class="form-label required-label" for="received_at">Дата поступления</label><input class="form-control" type="date" id="received_at" name="received_at" value="{{ part.received_at.isoformat() if part else '' }}" required></div>
+      <div class="col-12 col-md-6"><label class="form-label required-label" for="category_id">Категория</label><select class="form-select" id="category_id" name="category_id" required><option value="">Выберите категорию</option>{% for category in categories %}<option value="{{ category.id }}" {% if part and part.category_id == category.id %}selected{% endif %}>{{ category.name }}</option>{% endfor %}</select></div>
+      <div class="col-12 col-md-6"><label class="form-label" for="supplier_id">Поставщик</label><select class="form-select" id="supplier_id" name="supplier_id"><option value="">Не указан</option>{% for supplier in suppliers %}<option value="{{ supplier.id }}" {% if part and part.supplier_id == supplier.id %}selected{% endif %}>{{ supplier.name }}</option>{% endfor %}</select></div>
+      {% if not part or not part.id %}<div class="col-12 col-md-6"><label class="form-label required-label" for="reserve_id">Резерв-источник</label><select class="form-select" id="reserve_id" name="reserve_id" required><option value="">Выберите резерв</option>{% for reserve in reserves %}<option value="{{ reserve.id }}" {% if part and part.reserve_id == reserve.id %}selected{% endif %}>{{ reserve.name }}</option>{% endfor %}</select></div>{% else %}<div class="col-12"><div class="alert alert-info mb-0"><i class="bi bi-info-circle me-1"></i>Резерв и статус изменяются отдельными операциями с автоматической записью истории.</div></div>{% endif %}
+      <div class="col-12"><label class="form-label" for="notes">Примечание</label><textarea class="form-control" id="notes" name="notes" rows="3" maxlength="4000">{{ part.notes or '' if part else '' }}</textarea></div>
+    </div>
+    <div class="d-flex gap-2 mt-4"><button class="btn btn-primary" type="submit"><i class="bi bi-check-lg me-1"></i>Сохранить</button><a class="btn btn-outline-secondary" href="{% if part and part.id %}/parts/{{ part.id }}{% else %}/parts{% endif %}">Отмена</a></div>
+  </form>
+</div></div></div></div>
+{% endblock %}

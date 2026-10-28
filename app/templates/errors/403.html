@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+{% macro panel() %}<div class="card content-card"><div class="card-body p-5 text-center"><div class="display-4 text-danger mb-3"><i class="bi bi-shield-x"></i></div><h1 class="h3">Доступ запрещён</h1><p class="text-secondary">{{ message or 'Недостаточно прав для выполнения операции.' }}</p><a class="btn btn-primary" href="/">На главную</a></div></div>{% endmacro %}
+{% block content %}<div class="row justify-content-center"><div class="col-lg-7">{{ panel() }}</div></div>{% endblock %}
+{% block anonymous_content %}<div class="login-panel">{{ panel() }}</div>{% endblock %}
+

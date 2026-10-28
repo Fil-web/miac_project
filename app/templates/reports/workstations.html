@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% from "reports/_buttons.html" import export_buttons %}
+{% block breadcrumbs %}<li class="breadcrumb-item"><a href="/reports">Отчёты</a></li><li class="breadcrumb-item active">Список АРМ</li>{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3"><div><h1 class="h3 mb-1">Список АРМ</h1><p class="text-secondary mb-0">Все рабочие места и текущая комплектация</p></div>{{ export_buttons('/reports/workstations/export/pdf', '/reports/workstations/export/xlsx') }}</div>
+<div class="card content-card"><div class="table-responsive"><table class="table table-hover align-middle mb-0">
+  <thead><tr><th>Наименование</th><th>Кабинет</th><th>Ответственный</th><th>Подразделение</th><th class="text-end">Комплектующих</th><th>Состояние</th></tr></thead>
+  <tbody>{% for row in rows %}<tr><td><a href="/workstations/{{ row.workstation.id }}">{{ row.workstation.name }}</a></td><td>{{ row.workstation.cabinet }}</td><td>{{ row.workstation.responsible.full_name if row.workstation.responsible else 'Не назначен' }}</td><td>{{ row.workstation.responsible.department if row.workstation.responsible and row.workstation.responsible.department else '—' }}</td><td class="text-end fw-semibold">{{ row.parts_count }}</td><td>{{ row.state }}</td></tr>{% else %}<tr><td colspan="6" class="text-center text-secondary py-4">АРМ не найдены</td></tr>{% endfor %}</tbody>
+</table></div></div>
+{% endblock %}

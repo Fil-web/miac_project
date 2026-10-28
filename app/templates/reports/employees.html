@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% from "reports/_buttons.html" import export_buttons %}
+{% block breadcrumbs %}<li class="breadcrumb-item"><a href="/reports">Отчёты</a></li><li class="breadcrumb-item active">Список сотрудников</li>{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3"><div><h1 class="h3 mb-1">Список сотрудников</h1><p class="text-secondary mb-0">Сотрудники и связанные учётные записи</p></div>{{ export_buttons('/reports/employees/export/pdf', '/reports/employees/export/xlsx') }}</div>
+<div class="card content-card"><div class="table-responsive"><table class="table table-hover align-middle mb-0">
+  <thead><tr><th>ФИО</th><th>Подразделение</th><th>Должность</th><th>Телефон</th><th>Логин</th><th>Роль</th><th>Учётная запись</th><th>Сотрудник</th></tr></thead>
+  <tbody>{% for row in rows %}<tr><td>{{ row.employee.full_name }}</td><td>{{ row.employee.department or '—' }}</td><td>{{ row.employee.position or '—' }}</td><td>{{ row.employee.phone or '—' }}</td><td class="font-monospace">{{ row.username or '—' }}</td><td>{{ row.role or '—' }}</td><td>{{ row.account_state }}</td><td>{{ row.employee_state }}</td></tr>{% else %}<tr><td colspan="8" class="text-center text-secondary py-4">Сотрудники не найдены</td></tr>{% endfor %}</tbody>
+</table></div></div>
+{% endblock %}

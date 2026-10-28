@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+  <div><h1 class="h3 mb-1">Главная</h1><p class="text-secondary mb-0">Состояние учёта на текущий момент</p></div>
+  {% if user.role.name in ['admin', 'storekeeper'] %}<a class="btn btn-primary" href="/parts/new"><i class="bi bi-plus-lg me-1"></i>Принять комплектующее</a>{% endif %}
+</div>
+<div class="row g-3 mb-4">
+  <div class="col-12 col-md-4"><div class="card metric-card h-100"><div class="card-body d-flex align-items-center gap-3"><span class="metric-icon"><i class="bi bi-pc-display"></i></span><div><div class="text-secondary small">Всего действующих АРМ</div><div class="display-6 fw-semibold">{{ counters.workstations }}</div></div></div></div></div>
+  <div class="col-12 col-md-4"><div class="card metric-card h-100"><div class="card-body d-flex align-items-center gap-3"><span class="metric-icon"><i class="bi bi-box-seam"></i></span><div><div class="text-secondary small">Комплектующих на складе</div><div class="display-6 fw-semibold">{{ counters.in_stock }}</div></div></div></div></div>
+  <div class="col-12 col-md-4"><div class="card metric-card h-100"><div class="card-body d-flex align-items-center gap-3"><span class="metric-icon"><i class="bi bi-trash3"></i></span><div><div class="text-secondary small">Списано за месяц</div><div class="display-6 fw-semibold">{{ counters.written_off_month }}</div></div></div></div></div>
+</div>
+<div class="card content-card">
+  <div class="card-header bg-white py-3"><h2 class="h5 mb-0">Последние операции</h2></div>
+  <div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Дата</th><th>Операция</th><th>Комплектующее</th><th>Исполнитель</th></tr></thead><tbody>
+    {% for movement in recent_movements %}<tr><td>{{ movement.performed_at.strftime('%d.%m.%Y %H:%M') }}</td><td>{{ movement_labels[movement.movement_type] }}</td><td><a href="/parts/{{ movement.part.id }}">{{ movement.part.name }}</a></td><td>{{ movement.performer.full_name if movement.performer else 'Системная запись' }}</td></tr>
+    {% else %}<tr><td colspan="4" class="text-center text-secondary py-4">Операций пока нет</td></tr>{% endfor %}
+  </tbody></table></div>
+</div>
+{% endblock %}
+

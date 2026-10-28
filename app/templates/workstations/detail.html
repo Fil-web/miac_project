@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block breadcrumbs %}<li class="breadcrumb-item"><a href="/workstations">АРМ</a></li><li class="breadcrumb-item active">{{ workstation.name }}</li>{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+  <div><h1 class="h3 mb-1">{{ workstation.name }}</h1><div class="text-secondary">Кабинет {{ workstation.cabinet }}</div></div>
+  <div class="d-flex gap-2 no-print">
+    {% if user.role.name == 'admin' and not workstation.is_deleted %}<a href="/workstations/{{ workstation.id }}/edit" class="btn btn-icon btn-outline-primary" title="Изменить" aria-label="Изменить"><i class="bi bi-pencil"></i></a>{% endif %}
+    {% if user.role.name == 'admin' and workstation.is_deleted %}<form method="post" action="/workstations/{{ workstation.id }}/restore"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="btn btn-icon btn-outline-success" type="submit" title="Восстановить" aria-label="Восстановить"><i class="bi bi-arrow-counterclockwise"></i></button></form>{% endif %}
+    {% if not workstation.is_deleted %}<a href="/reports/workstation?workstation_id={{ workstation.id }}" class="btn btn-outline-secondary"><i class="bi bi-file-earmark-text me-1"></i>Отчёт</a>{% endif %}
+  </div>
+</div>
+
+{% if workstation.is_deleted %}<div class="alert alert-danger"><i class="bi bi-trash3 me-1"></i>АРМ удалено {{ workstation.deleted_at.strftime('%d.%m.%Y %H:%M') if workstation.deleted_at else '' }} пользователем {{ workstation.deleted_by_user.username if workstation.deleted_by_user else 'не определён' }}. Причина: {{ workstation.deletion_reason or 'не указана' }}. Карточка и история сохранены.</div>{% endif %}
+
+<div class="row g-3 mb-3">
+  <div class="col-12 col-xl-5"><div class="card content-card h-100"><div class="card-header bg-white py-3"><h2 class="h5 mb-0">Карточка АРМ</h2></div><div class="card-body"><dl class="row mb-0">
+    <dt class="col-sm-5 text-secondary">Кабинет</dt><dd class="col-sm-7">{{ workstation.cabinet }}</dd>
+    <dt class="col-sm-5 text-secondary">Ответственный</dt><dd class="col-sm-7">{{ workstation.responsible.full_name if workstation.responsible else 'Не назначен' }}</dd>
+    <dt class="col-sm-5 text-secondary">Подразделение</dt><dd class="col-sm-7">{{ workstation.responsible.department if workstation.responsible and workstation.responsible.department else '—' }}</dd>
+    <dt class="col-sm-5 text-secondary">Состояние</dt><dd class="col-sm-7">{% if workstation.is_active and not workstation.is_deleted and not missing_components %}<span class="text-success"><i class="bi bi-check-circle me-1"></i>Действует</span>{% else %}<span class="text-danger"><i class="bi bi-x-circle me-1"></i>Не действует</span>{% if missing_components %}<div class="small text-secondary mt-1">Отсутствуют: {{ missing_components|join(', ') }}</div>{% endif %}{% endif %}</dd>
+    <dt class="col-sm-5 text-secondary">Описание</dt><dd class="col-sm-7">{{ workstation.description or '—' }}</dd>
+  </dl></div></div></div>
+  {% if user.role.name in ['admin', 'storekeeper'] and not workstation.is_deleted %}
+  <div class="col-12 col-xl-7 no-print"><div class="card content-card h-100"><div class="card-header bg-white py-3"><h2 class="h5 mb-0">Установить комплектующее</h2></div><div class="card-body">
+    {% if available_parts %}
+    <form method="post" action="/workstations/{{ workstation.id }}/install">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <select class="form-select mb-3" name="part_id" required><option value="">Выберите комплектующее со склада</option>{% for part in available_parts %}<option value="{{ part.id }}">{{ part.name }} · {{ part.inventory_number or 'без инв. №' }} · {{ part.reserve.name }}</option>{% endfor %}</select>
+      <button class="btn btn-primary" type="submit"><i class="bi bi-wrench-adjustable me-1"></i>Установить</button>
+    </form>
+    {% else %}<p class="text-secondary mb-0">На складе нет доступных комплектующих.</p>{% endif %}
+  </div></div></div>
+  {% endif %}
+</div>
+
+{% if user.role.name == 'admin' and not workstation.is_deleted %}
+<div class="card content-card border-danger mb-3 no-print">
+  <div class="card-header bg-white py-3"><h2 class="h6 text-danger mb-0"><i class="bi bi-trash3 me-1"></i>Удаление АРМ</h2></div>
+  <div class="card-body">
+    <p class="small text-secondary">Удалить можно только АРМ без установленных комплектующих. Карточка и история останутся в базе и будут доступны для восстановления.</p>
+    <form method="post" action="/workstations/{{ workstation.id }}/delete" class="row g-2 align-items-end">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <div class="col-12 col-lg-9"><label class="form-label required-label" for="workstation-delete-reason">Причина удаления</label><textarea class="form-control" id="workstation-delete-reason" name="reason" minlength="3" maxlength="1000" rows="2" required></textarea></div>
+      <div class="col-12 col-lg-3 d-grid"><button class="btn btn-outline-danger" type="submit"><i class="bi bi-trash3 me-1"></i>Удалить АРМ</button></div>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+<div class="card content-card mb-3">
+  <div class="card-header bg-white py-3"><h2 class="h5 mb-0">Основные комплектующие</h2></div>
+  <div class="card-body"><div class="row g-3">
+    {% for group in main_components %}
+    <div class="col-12 col-lg-4"><div class="border rounded h-100 p-3">
+      <div class="d-flex align-items-center gap-2 mb-2"><span class="metric-icon"><i class="bi {{ group.icon }}"></i></span><h3 class="h6 mb-0">{{ group.label }}</h3></div>
+      {% if group.parts %}<ul class="list-unstyled mb-0">{% for part in group.parts %}<li class="py-1"><a href="/parts/{{ part.id }}">{{ part.name }}</a><div class="small text-secondary">{{ part.part_type }} · {{ part.inventory_number or 'без инв. №' }}</div></li>{% endfor %}</ul>{% else %}<span class="text-secondary">Не установлено</span>{% endif %}
+    </div></div>
+    {% endfor %}
+  </div></div>
+</div>
+
+<div class="card content-card mb-3"><div class="card-header bg-white py-3 d-flex justify-content-between"><h2 class="h5 mb-0">Установленные комплектующие</h2><span class="badge text-bg-primary">{{ installed_parts|length }}</span></div><div class="table-responsive"><table class="table table-hover align-middle mb-0">
+  <thead><tr><th>Наименование</th><th>Инвентарный номер</th><th>Серийный номер</th><th>Категория</th><th>Резерв</th>{% if user.role.name in ['admin', 'storekeeper'] and not workstation.is_deleted %}<th class="no-print">Операции</th>{% endif %}</tr></thead>
+  <tbody>{% for part in installed_parts %}<tr>
+    <td><a href="/parts/{{ part.id }}">{{ part.name }}</a><div class="small text-secondary">{{ part.part_type }}</div></td>
+    <td class="font-monospace">{{ part.inventory_number or '—' }}</td>
+    <td class="font-monospace">{{ part.serial_number or '—' }}</td>
+    <td>{{ part.category.name }}</td><td>{{ part.reserve.name }}</td>
+    {% if user.role.name in ['admin', 'storekeeper'] and not workstation.is_deleted %}<td class="no-print"><details><summary class="btn btn-sm btn-outline-secondary">Действия</summary><div class="border rounded p-3 mt-2">
+      <form method="post" action="/workstations/{{ workstation.id }}/remove/{{ part.id }}" class="mb-3"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><div class="small fw-semibold mb-2">Вернуть на склад</div><button class="btn btn-sm btn-outline-primary" type="submit">Вернуть</button></form>
+      {% if other_workstations %}<form method="post" action="/workstations/{{ workstation.id }}/move/{{ part.id }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><div class="small fw-semibold mb-2">Переместить в другое АРМ</div><select class="form-select form-select-sm mb-2" name="target_workstation_id" required><option value="">Выберите АРМ</option>{% for target in other_workstations %}<option value="{{ target.id }}">{{ target.name }} — кабинет {{ target.cabinet }}</option>{% endfor %}</select><button class="btn btn-sm btn-outline-primary" type="submit">Переместить</button></form>{% endif %}
+    </div></details></td>{% endif %}
+  </tr>{% else %}<tr><td colspan="{{ 6 if user.role.name in ['admin', 'storekeeper'] and not workstation.is_deleted else 5 }}" class="text-center text-secondary py-4">Комплектующие не установлены</td></tr>{% endfor %}</tbody>
+</table></div></div>
+
+<div class="card content-card"><div class="card-header bg-white py-3"><h2 class="h5 mb-0">История операций по АРМ</h2></div><div class="table-responsive"><table class="table table-hover align-middle mb-0">
+  <thead><tr><th>Дата</th><th>Операция</th><th>Комплектующее</th><th>Сведения</th><th>Исполнитель</th></tr></thead>
+  <tbody>{% for movement in movements %}<tr><td>{{ movement.performed_at.strftime('%d.%m.%Y %H:%M') }}</td><td>{{ movement_labels[movement.movement_type] }}</td><td><a href="/parts/{{ movement.part.id }}">{{ movement.part.name }}</a></td><td>{{ movement.reason }}</td><td>{{ movement.performer.full_name if movement.performer else 'Системная запись' }}</td></tr>{% else %}<tr><td colspan="5" class="text-center text-secondary py-4">Операций нет</td></tr>{% endfor %}</tbody>
+</table></div></div>
+{% endblock %}

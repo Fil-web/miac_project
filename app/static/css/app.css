@@ -1,0 +1,293 @@
+:root {
+  --miac-sidebar-width: 260px;
+  --miac-border: #dee2e6;
+  --miac-bg: #f5f7fa;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--miac-bg);
+  color: #212529;
+}
+
+.topbar {
+  min-height: 64px;
+  border-bottom: 1px solid var(--miac-border);
+  background: #fff;
+}
+
+.sidebar {
+  position: fixed;
+  top: 64px;
+  bottom: 0;
+  left: 0;
+  z-index: 100;
+  width: var(--miac-sidebar-width);
+  overflow-y: auto;
+  background: #fff;
+  border-right: 1px solid var(--miac-border);
+}
+
+.sidebar .nav-link {
+  color: #495057;
+  border-radius: .375rem;
+  margin: .15rem .75rem;
+  padding: .7rem .85rem;
+}
+
+.sidebar .nav-link:hover,
+.sidebar .nav-link.active {
+  color: #0d6efd;
+  background: #e7f1ff;
+}
+
+.sidebar .nav-link .bi {
+  width: 1.4rem;
+  margin-right: .5rem;
+}
+
+.main-content {
+  margin-left: var(--miac-sidebar-width);
+  padding: 1.5rem;
+}
+
+.content-card,
+.metric-card {
+  border: 1px solid var(--miac-border);
+  box-shadow: 0 .125rem .25rem rgba(0, 0, 0, .035);
+}
+
+.metric-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  color: #0d6efd;
+  background: #e7f1ff;
+  border-radius: .75rem;
+  font-size: 1.35rem;
+}
+
+.table th {
+  color: #495057;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.required-label::after {
+  content: " *";
+  color: #dc3545;
+}
+
+.status-in-stock { background: #d1e7dd; color: #0f5132; }
+.status-installed { background: #cfe2ff; color: #084298; }
+.status-written-off { background: #e2e3e5; color: #41464b; }
+
+.login-panel {
+  width: min(100% - 2rem, 440px);
+}
+
+.word-break {
+  overflow-wrap: anywhere;
+}
+
+.catalog-nav {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .75rem;
+}
+
+.catalog-nav-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .65rem;
+  min-height: 3.25rem;
+  padding: .75rem 1rem;
+  color: #495057;
+  text-decoration: none;
+  background: #fff;
+  border: 1px solid var(--miac-border);
+  border-radius: .625rem;
+  transition: color .15s ease, border-color .15s ease, background-color .15s ease;
+}
+
+.catalog-nav-item:hover,
+.catalog-nav-item.active {
+  color: #0d6efd;
+  background: #e7f1ff;
+  border-color: #9ec5fe;
+}
+
+.catalog-nav-item .bi {
+  font-size: 1.15rem;
+}
+
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  padding: 0;
+  line-height: 1;
+  border-radius: .5rem;
+}
+
+.btn-sm.btn-icon {
+  width: 2rem;
+  height: 2rem;
+}
+
+.btn-icon .bi {
+  margin: 0;
+  font-size: 1rem;
+}
+
+details > summary.btn-icon {
+  list-style: none;
+}
+
+details > summary.btn-icon::-webkit-details-marker {
+  display: none;
+}
+
+.action-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: .4rem;
+  min-width: 9rem;
+}
+
+.action-buttons form {
+  margin: 0;
+}
+
+/* В учётных записях четыре постоянные позиции не дают неполному набору
+   кнопок смещаться вправо относительно соседних строк. */
+.action-buttons.user-action-buttons {
+  display: grid;
+  grid-template-columns: repeat(4, 2rem);
+  width: 9.2rem;
+  min-width: 9.2rem;
+  margin-inline: auto;
+}
+
+.status-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 50%;
+}
+
+.status-icon-active {
+  color: #0f5132;
+  background: #d1e7dd;
+}
+
+.status-icon-archived {
+  color: #495057;
+  background: #e2e3e5;
+}
+
+.status-icon-inactive {
+  color: #842029;
+  background: #f8d7da;
+}
+
+.audit-table th:last-child {
+  min-width: 22rem;
+}
+
+.audit-details {
+  color: #495057;
+  font-size: .875rem;
+  line-height: 1.45;
+}
+
+.audit-delete-form {
+  width: 18rem;
+}
+
+.password-reset-form {
+  width: 22rem;
+}
+
+.workstation-delete-form {
+  width: 18rem;
+}
+
+.table-filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: .75rem 1rem;
+  background: #fff;
+  border-bottom: 1px solid var(--miac-border);
+}
+
+.table-filter-input {
+  max-width: 28rem;
+}
+
+@media (max-width: 991.98px) {
+  .sidebar {
+    position: static;
+    width: auto;
+    border-right: 0;
+  }
+
+  .main-content {
+    margin-left: 0;
+    padding: 1rem;
+  }
+
+  .catalog-nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 575.98px) {
+  .catalog-nav {
+    grid-template-columns: 1fr;
+  }
+
+  .audit-delete-form {
+    width: 14rem;
+  }
+
+  .password-reset-form {
+    width: 16rem;
+  }
+
+  .table-filter-bar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .table-filter-input {
+    max-width: none;
+  }
+}
+
+@media print {
+  .topbar,
+  .sidebar,
+  .no-print,
+  .breadcrumb {
+    display: none !important;
+  }
+
+  .main-content {
+    margin: 0;
+    padding: 0;
+  }
+
+  body { background: #fff; }
+  .card { box-shadow: none !important; }
+}

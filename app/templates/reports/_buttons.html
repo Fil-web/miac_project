@@ -1,0 +1,7 @@
+{% macro export_buttons(pdf_url, xlsx_url) %}
+<div class="d-flex flex-wrap gap-2 no-print">
+  <button class="btn btn-outline-secondary js-print" type="button"><i class="bi bi-printer me-1"></i>Печать</button>
+  <a class="btn btn-outline-danger" href="{{ pdf_url }}"><i class="bi bi-file-earmark-pdf me-1"></i>PDF</a>
+  <a class="btn btn-outline-success" href="{{ xlsx_url }}"><i class="bi bi-file-earmark-excel me-1"></i>Excel</a>
+</div>
+{% endmacro %}

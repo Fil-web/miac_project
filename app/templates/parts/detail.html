@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block breadcrumbs %}<li class="breadcrumb-item"><a href="/parts">Комплектующие</a></li><li class="breadcrumb-item active">Карточка № {{ part.id }}</li>{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+  <div><h1 class="h3 mb-1">{{ part.name }}</h1><div class="text-secondary">{{ part.part_type }} · карточка № {{ part.id }}</div></div>
+  <div class="d-flex flex-wrap gap-2 no-print">
+    {% if user.role.name in ['admin', 'storekeeper'] and not part.is_deleted %}<a class="btn btn-icon btn-outline-primary" href="/parts/{{ part.id }}/edit" title="Изменить" aria-label="Изменить"><i class="bi bi-pencil"></i></a>{% endif %}
+    {% if user.role.name == 'admin' and part.is_deleted %}
+      <form method="post" action="/parts/{{ part.id }}/restore"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="btn btn-icon btn-outline-success" type="submit" title="Восстановить" aria-label="Восстановить"><i class="bi bi-arrow-counterclockwise"></i></button></form>
+    {% elif user.role.name == 'admin' %}
+      <details><summary class="btn btn-icon btn-outline-danger" title="Удалить" aria-label="Удалить"><i class="bi bi-trash3"></i></summary><form method="post" action="/parts/{{ part.id }}/delete" class="border rounded bg-white p-3 mt-2" style="min-width: 18rem;"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><label class="form-label" for="part-delete-reason">Причина удаления</label><textarea class="form-control mb-2" id="part-delete-reason" name="reason" minlength="3" maxlength="1000" rows="2" required></textarea><button class="btn btn-danger" type="submit"><i class="bi bi-trash3 me-1"></i>Подтвердить</button></form></details>
+    {% endif %}
+    <button class="btn btn-outline-secondary js-print" type="button"><i class="bi bi-printer me-1"></i>Печать</button>
+  </div>
+</div>
+{% if part.is_deleted %}<div class="alert alert-danger"><i class="bi bi-trash3 me-1"></i>Карточка удалена {{ part.deleted_at.strftime('%d.%m.%Y %H:%M') if part.deleted_at else '' }} пользователем {{ part.deleted_by_user.username if part.deleted_by_user else 'не определён' }}. Причина: {{ part.deletion_reason or 'не указана' }}. Все реквизиты и история движения сохранены.</div>{% endif %}
+<div class="row g-3 mb-3">
+  <div class="col-12 col-xl-7"><div class="card content-card h-100"><div class="card-header bg-white py-3"><h2 class="h5 mb-0">Реквизиты</h2></div><div class="card-body"><dl class="row mb-0">
+    <dt class="col-sm-5 text-secondary">Статус</dt><dd class="col-sm-7"><span class="badge status-{{ part.status.replace('_', '-') }}">{{ status_labels[part.status] }}</span></dd>
+    <dt class="col-sm-5 text-secondary">Инвентарный номер</dt><dd class="col-sm-7 font-monospace word-break">{{ part.inventory_number or 'Не учитывается' }}</dd>
+    <dt class="col-sm-5 text-secondary">Серийный номер</dt><dd class="col-sm-7 font-monospace word-break">{{ part.serial_number or '—' }}</dd>
+    <dt class="col-sm-5 text-secondary">Категория</dt><dd class="col-sm-7">{{ part.category.name }}</dd>
+    <dt class="col-sm-5 text-secondary">Резерв-источник</dt><dd class="col-sm-7">{{ part.reserve.name }}</dd>
+    <dt class="col-sm-5 text-secondary">Дата поступления</dt><dd class="col-sm-7">{{ part.received_at.strftime('%d.%m.%Y') }}</dd>
+    <dt class="col-sm-5 text-secondary">Поставщик</dt><dd class="col-sm-7">{{ part.supplier.name if part.supplier else '—' }}</dd>
+    <dt class="col-sm-5 text-secondary">Текущее АРМ</dt><dd class="col-sm-7">{% if part.current_workstation %}<a href="/workstations/{{ part.current_workstation.id }}">{{ part.current_workstation.name }}</a>{% else %}—{% endif %}</dd>
+    <dt class="col-sm-5 text-secondary">Примечание</dt><dd class="col-sm-7">{{ part.notes or '—' }}</dd>
+  </dl></div></div></div>
+  {% if user.role.name in ['admin', 'storekeeper'] and part.status != 'written_off' and not part.is_deleted %}
+  <div class="col-12 col-xl-5 no-print"><div class="card content-card h-100"><div class="card-header bg-white py-3"><h2 class="h5 mb-0">Операции</h2></div><div class="card-body">
+    <h3 class="h6">Переместить в другой резерв</h3>
+    <form method="post" action="/parts/{{ part.id }}/transfer-reserve" class="mb-4">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <select class="form-select mb-2" name="reserve_id" aria-label="Целевой резерв" required><option value="">Выберите резерв</option>{% for reserve in reserves if reserve.id != part.reserve_id %}<option value="{{ reserve.id }}">{{ reserve.name }}</option>{% endfor %}</select>
+      <button class="btn btn-outline-primary" type="submit"><i class="bi bi-arrow-left-right me-1"></i>Переместить</button>
+    </form>
+    <hr>
+    <h3 class="h6 text-danger">Списать комплектующее</h3>
+    <form method="post" action="/parts/{{ part.id }}/write-off">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <input class="form-control mb-2" name="reason" minlength="3" maxlength="2000" placeholder="Причина списания" required>
+      <button class="btn btn-outline-danger" type="submit"><i class="bi bi-trash3 me-1"></i>Списать</button>
+    </form>
+  </div></div></div>
+  {% endif %}
+</div>
+<div class="card content-card"><div class="card-header bg-white py-3"><h2 class="h5 mb-0">История движения</h2></div><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Дата</th><th>Операция</th><th>Откуда</th><th>Куда</th><th>Сведения</th><th>Исполнитель</th></tr></thead><tbody>
+{% for movement in movements %}<tr><td>{{ movement.performed_at.strftime('%d.%m.%Y %H:%M') }}</td><td>{{ movement_labels[movement.movement_type] }}</td><td>{% if movement.from_reserve %}{{ movement.from_reserve.name }}{% endif %}{% if movement.from_workstation %}<div class="small">АРМ {{ movement.from_workstation.name }}</div>{% endif %}{% if not movement.from_reserve and not movement.from_workstation %}—{% endif %}</td><td>{% if movement.to_reserve %}{{ movement.to_reserve.name }}{% endif %}{% if movement.to_workstation %}<div class="small">АРМ {{ movement.to_workstation.name }}</div>{% endif %}{% if not movement.to_reserve and not movement.to_workstation %}—{% endif %}</td><td>{{ movement.reason }}{% if movement.document_number %}<div class="small text-secondary">Документ: {{ movement.document_number }}</div>{% endif %}</td><td>{{ movement.performer.full_name if movement.performer else 'Системная запись' }}</td></tr>
+{% else %}<tr><td colspan="6" class="text-center text-secondary py-4">История отсутствует</td></tr>{% endfor %}
+</tbody></table></div></div>
+{% endblock %}

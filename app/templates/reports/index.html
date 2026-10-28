@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block breadcrumbs %}<li class="breadcrumb-item active">Отчёты</li>{% endblock %}
+{% block content %}
+<div class="mb-4"><h1 class="h3 mb-1">Отчёты</h1><p class="text-secondary mb-0">Каждый отчёт можно распечатать или сохранить в PDF и Excel.</p></div>
+<div class="row g-3">
+  <div class="col-12 col-lg-6"><a class="card content-card h-100 text-decoration-none text-body" href="/reports/stocks"><div class="card-body p-4 d-flex gap-3"><span class="metric-icon"><i class="bi bi-boxes"></i></span><div><h2 class="h5">Остатки по резервам</h2><p class="text-secondary mb-0">На складе, установлено и списано для каждого источника.</p></div></div></a></div>
+  <div class="col-12 col-lg-6"><a class="card content-card h-100 text-decoration-none text-body" href="/reports/workstation"><div class="card-body p-4 d-flex gap-3"><span class="metric-icon"><i class="bi bi-pc-display"></i></span><div><h2 class="h5">Комплектующие по АРМ</h2><p class="text-secondary mb-0">Текущий состав выбранного автоматизированного рабочего места.</p></div></div></a></div>
+  <div class="col-12 col-lg-6"><a class="card content-card h-100 text-decoration-none text-body" href="/reports/employees"><div class="card-body p-4 d-flex gap-3"><span class="metric-icon"><i class="bi bi-people"></i></span><div><h2 class="h5">Список сотрудников</h2><p class="text-secondary mb-0">Сотрудники, подразделения и связанные учётные записи.</p></div></div></a></div>
+  <div class="col-12 col-lg-6"><a class="card content-card h-100 text-decoration-none text-body" href="/reports/workstations"><div class="card-body p-4 d-flex gap-3"><span class="metric-icon"><i class="bi bi-list-check"></i></span><div><h2 class="h5">Список АРМ</h2><p class="text-secondary mb-0">Все рабочие места, ответственные и количество комплектующих.</p></div></div></a></div>
+</div>
+{% endblock %}
